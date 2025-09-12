@@ -1,0 +1,40 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Node.js (shouldn't be in Terraform directory)
+node_modules/
+package-lock.json
+package.json
+
+# Temporary files
+cookies.txt
+*.tmp
+/tmp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
+
+# Backup files
+*-backup.yaml
+*-backup.yml
+
+# Documentation and testing (development only)
+docs/
+testing/

@@ -1,0 +1,72 @@
+{
+  "id": null,
+  "title": "ShopMate Business Activity",
+  "tags": ["business"],
+  "style": "dark",
+  "timezone": "",
+  "panels": [
+    {
+      "id": 1,
+      "title": "👀 Product Views",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "sum(product_service_views_total)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "🛒 Cart Additions",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "targets": [
+        {
+          "expr": "sum(cart_service_items_added_total)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "📦 Orders Placed",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "targets": [
+        {
+          "expr": "sum(order_service_orders_created_total)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "🔥 Activity Rate (requests/sec)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+      "targets": [
+        {
+          "expr": "sum(rate(product_service_http_requests_total[1m]))",
+          "legendFormat": "Product Service",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(cart_service_http_requests_total[1m]))",
+          "legendFormat": "Cart Service",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(order_service_http_requests_total[1m]))",
+          "legendFormat": "Order Service",
+          "refId": "C"
+        }
+      ]
+    }
+  ],
+  "time": {"from": "now-15m", "to": "now"},
+  "refresh": "5s",
+  "schemaVersion": 16,
+  "version": 0
+}

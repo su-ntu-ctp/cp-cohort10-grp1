@@ -1,0 +1,19 @@
+settings:
+  clusterName: ${CLUSTER_NAME}
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: ${KARPENTER_ROLE_ARN}
+
+replicas: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+nodeSelector:
+  kubernetes.io/os: linux

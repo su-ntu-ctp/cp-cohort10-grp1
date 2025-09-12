@@ -1,0 +1,133 @@
+# Development environment patches
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-service
+  namespace: shopmate
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: frontend-service
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        env:
+        - name: LOG_LEVEL
+          value: "debug"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: shopmate
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: product-service
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart-service
+  namespace: shopmate
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: cart-service
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: shopmate
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: order-service
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+
+---
+# HPA patches for dev environment
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-service-hpa
+  namespace: shopmate
+spec:
+  minReplicas: 1
+  maxReplicas: 5
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: product-service-hpa
+  namespace: shopmate
+spec:
+  minReplicas: 1
+  maxReplicas: 5
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cart-service-hpa
+  namespace: shopmate
+spec:
+  minReplicas: 1
+  maxReplicas: 5
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: order-service-hpa
+  namespace: shopmate
+spec:
+  minReplicas: 1
+  maxReplicas: 5
+
+---
+# App Ingress patch (only annotations)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shopmate-eks-ingress
+  namespace: shopmate
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: shopmate-eks.dev.sctp-sandbox.com

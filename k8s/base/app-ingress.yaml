@@ -1,0 +1,77 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shopmate-eks-ingress
+  namespace: shopmate
+  annotations:
+    cert-manager.io/cluster-issuer: "PLACEHOLDER_CLUSTER_ISSUER"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - PLACEHOLDER_HOST
+    secretName: PLACEHOLDER_TLS_SECRET
+  rules:
+  - host: PLACEHOLDER_HOST
+    http:
+      paths:
+      # API paths
+      - path: /api/products
+        pathType: Prefix
+        backend:
+          service:
+            name: product-service
+            port:
+              number: 3001
+      - path: /api/cart
+        pathType: Prefix
+        backend:
+          service:
+            name: cart-service
+            port:
+              number: 3002
+      - path: /api/orders
+        pathType: Prefix
+        backend:
+          service:
+            name: order-service
+            port:
+              number: 3003
+      # Metrics paths (no rewrite needed!)
+      - path: /metrics/product
+        pathType: Exact
+        backend:
+          service:
+            name: product-service
+            port:
+              number: 3001
+      - path: /metrics/cart
+        pathType: Exact
+        backend:
+          service:
+            name: cart-service
+            port:
+              number: 3002
+      - path: /metrics/order
+        pathType: Exact
+        backend:
+          service:
+            name: order-service
+            port:
+              number: 3003
+      - path: /metrics
+        pathType: Exact
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 3000
+      # Frontend catch-all (must be last)
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80

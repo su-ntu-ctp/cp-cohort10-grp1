@@ -1,0 +1,70 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: shopmate-dev
+
+resources:
+  - ../../base
+  - dev-configmap.yaml
+
+patches:
+  - path: dev-patches.yaml
+
+replacements:
+- source:
+    kind: ConfigMap
+    name: shopmate-config
+    fieldPath: data.hostname
+  targets:
+  - select:
+      kind: Ingress
+    fieldPaths:
+    - spec.rules.0.host
+    - spec.tls.0.hosts.0
+- source:
+    kind: ConfigMap
+    name: shopmate-config
+    fieldPath: data.tls-secret
+  targets:
+  - select:
+      kind: Ingress
+      name: shopmate-eks-ingress
+    fieldPaths:
+    - spec.tls.0.secretName
+- source:
+    kind: ConfigMap
+    name: shopmate-config
+    fieldPath: data.monitoring-tls-secret
+  targets:
+  - select:
+      kind: Ingress
+      name: shopmate-monitoring-ingress
+    fieldPaths:
+    - spec.tls.0.secretName
+- source:
+    kind: ConfigMap
+    name: shopmate-config
+    fieldPath: data.cluster-issuer
+  targets:
+  - select:
+      kind: Ingress
+    fieldPaths:
+    - metadata.annotations.[cert-manager.io/cluster-issuer]
+- source:
+    kind: ConfigMap
+    name: shopmate-config
+    fieldPath: data.aws-secret-name
+  targets:
+  - select:
+      kind: ExternalSecret
+    fieldPaths:
+    - spec.data.0.remoteRef.key
+
+labels:
+  - pairs:
+      environment: dev
+  
+commonAnnotations:
+  environment: development
+  domain: shopmate-eks.dev.sctp-sandbox.com

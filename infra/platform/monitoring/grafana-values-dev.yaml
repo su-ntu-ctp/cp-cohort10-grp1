@@ -1,0 +1,39 @@
+adminPassword: admin
+
+serviceAccount:
+  create: true
+  name: shopmate-grafana
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::255945442255:role/shopmate-eks-grafana-cloudwatch
+
+grafana.ini:
+  server:
+    domain: shopmate-eks.dev.sctp-sandbox.com
+    root_url: https://shopmate-eks.dev.sctp-sandbox.com/grafana/
+
+service:
+  type: ClusterIP
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClassName: gp2-immediate
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://shopmate-prometheus-server.monitoring.svc.cluster.local:80
+      access: proxy
+      isDefault: true
+    - name: Loki
+      type: loki
+      url: http://shopmate-loki.monitoring.svc.cluster.local:3100
+      access: proxy
+    - name: CloudWatch
+      type: cloudwatch
+      jsonData:
+        defaultRegion: ap-southeast-1
+        authType: default

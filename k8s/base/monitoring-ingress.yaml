@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shopmate-monitoring-ingress
+  namespace: monitoring
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    cert-manager.io/cluster-issuer: "PLACEHOLDER_CLUSTER_ISSUER"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - PLACEHOLDER_HOST
+    secretName: PLACEHOLDER_TLS_SECRET
+  rules:
+  - host: PLACEHOLDER_HOST
+    http:
+      paths:
+      - path: /prometheus(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: shopmate-prometheus-server
+            port:
+              number: 80
+      - path: /grafana(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: shopmate-grafana
+            port:
+              number: 80
+      - path: /loki(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: shopmate-loki
+            port:
+              number: 3100
+      - path: /alertmanager(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: shopmate-prometheus-alertmanager
+            port:
+              number: 9093

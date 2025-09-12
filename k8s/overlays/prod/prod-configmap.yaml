@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopmate-config
+  namespace: shopmate
+data:
+  AWS_REGION: "ap-southeast-1"
+  NODE_ENV: "prod"
+  BASE_URL: "https://shopmate-eks.sctp-sandbox.com"
+  PRODUCTS_TABLE: "shopmate-eks-products-prod"
+  CARTS_TABLE: "shopmate-eks-carts-prod"
+  ORDERS_TABLE: "shopmate-eks-orders-prod"
+  SESSIONS_TABLE: "shopmate-eks-sessions-prod"
+  # Kustomize replacement values
+  hostname: shopmate-eks.sctp-sandbox.com
+  cluster-issuer: letsencrypt-prod
+  tls-secret: shopmate-eks-letsencrypt-tls
+  monitoring-tls-secret: shopmate-monitoring-letsencrypt-tls
+  aws-secret-name: shopmate-eks-session-secret-prod

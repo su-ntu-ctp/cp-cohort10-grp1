@@ -1,0 +1,202 @@
+server:
+  persistentVolume:
+    enabled: true
+    size: 20Gi
+  extraArgs:
+    web.external-url: https://shopmate-eks.dev.sctp-sandbox.com/prometheus/
+    web.route-prefix: /
+
+alertmanager:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 4Gi
+    accessModes:
+      - ReadWriteOnce
+
+nodeExporter:
+  enabled: true
+
+pushgateway:
+  enabled: false
+
+kubeStateMetrics:
+  enabled: true
+
+serverFiles:
+  alerting_rules.yml:
+    groups:
+    - name: shopmate.test
+      rules:
+      - alert: AlwaysFiring
+        expr: vector(1)
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Test alert - always firing"
+          description: "This alert always fires for testing AlertManager"
+      
+      - alert: HighErrorRate
+        expr: 'sum(rate(nginx_ingress_controller_requests{status=~"5.."}[5m])) / sum(rate(nginx_ingress_controller_requests[5m])) > 0.05'
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP error rate detected"
+          description: "HTTP 5xx error rate is above 5% for more than 2 minutes"
+      
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} has been down for more than 2 minutes"
+      
+      - alert: HighMemoryUsage
+        expr: '(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 80'
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is high on {{ $labels.instance }}"
+      
+      - alert: HighCPUUsage
+        expr: '(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80'
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for more than 5 minutes on {{ $labels.instance }}"
+      
+      - alert: HighNodeCount
+        expr: 'count(up{job="node-exporter"}) >= 4'
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High node count detected"
+          description: "Cluster has {{ .Value }} nodes, approaching the 5-node limit"
+
+  prometheus.yml:
+    scrape_configs:
+      - job_name: 'frontend-service'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - shopmate
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: keep
+            regex: frontend-service
+          - source_labels: [__meta_kubernetes_pod_container_port_number]
+            action: keep
+            regex: "80"
+        metrics_path: '/metrics'
+        scheme: 'http'
+        scrape_interval: 5s
+      - job_name: 'product-service'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - shopmate
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: keep
+            regex: product-service
+          - source_labels: [__meta_kubernetes_pod_container_port_number]
+            action: keep
+            regex: "3001"
+        metrics_path: '/metrics'
+        scheme: 'http'
+        scrape_interval: 5s
+      - job_name: 'cart-service'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - shopmate
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: keep
+            regex: cart-service
+          - source_labels: [__meta_kubernetes_pod_container_port_number]
+            action: keep
+            regex: "3002"
+        metrics_path: '/metrics'
+        scheme: 'http'
+        scrape_interval: 5s
+      - job_name: 'order-service'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - shopmate
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: keep
+            regex: order-service
+          - source_labels: [__meta_kubernetes_pod_container_port_number]
+            action: keep
+            regex: "3003"
+        metrics_path: '/metrics'
+        scheme: 'http'
+        scrape_interval: 5s
+      - job_name: 'node-exporter'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - monitoring
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_endpoints_name]
+            action: keep
+            regex: shopmate-prometheus-prometheus-node-exporter
+          - source_labels: [__meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: metrics
+      - job_name: 'kube-state-metrics'
+        static_configs:
+          - targets: ['shopmate-prometheus-kube-state-metrics.monitoring.svc.cluster.local:8080']
+      - job_name: 'kubelet'
+        kubernetes_sd_configs:
+          - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+          - target_label: __address__
+            replacement: kubernetes.default.svc:443
+          - source_labels: [__meta_kubernetes_node_name]
+            regex: (.+)
+            target_label: __metrics_path__
+            replacement: /api/v1/nodes/$1/proxy/metrics
+      - job_name: 'kubelet-cadvisor'
+        kubernetes_sd_configs:
+          - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+          - target_label: __address__
+            replacement: kubernetes.default.svc:443
+          - source_labels: [__meta_kubernetes_node_name]
+            regex: (.+)
+            target_label: __metrics_path__
+            replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+
